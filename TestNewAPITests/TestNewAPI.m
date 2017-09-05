@@ -55,21 +55,6 @@
     }];
 }
 
-- (void)test_asyncDownload_newAPI {
-    
-    XCTestExpectation *expection = [XCTestExpectation alloc] initWithDescription:@""
-    
-    [[Downloader new] downloadWithCompletion:^(BOOL success, NSError *err) {
-        XCTAssert(success, @"failed");
-        [_exception fulfill];
-    }];
-    
-    [self waitForExpectationsWithTimeout:10 handler:^(NSError * _Nullable error) {
-        NSLog(@"timeout");
-    }];
-}
-
-
 /*
  XCTWaiterResultCompleted,   // wait的所有exception都为fulfulled
  XCTWaiterResultTimedOut,    // 在设定时间内任一exception不是fullfilled
