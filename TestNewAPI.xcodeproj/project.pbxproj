@@ -13,7 +13,6 @@
 		0C4904641F5D3F1500FE477B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C4904631F5D3F1500FE477B /* Assets.xcassets */; };
 		0C4904671F5D3F1500FE477B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0C4904651F5D3F1500FE477B /* LaunchScreen.storyboard */; };
 		0C49046A1F5D3F1500FE477B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C4904691F5D3F1500FE477B /* main.m */; };
-		0C4904741F5D3F1500FE477B /* TestNewAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C4904731F5D3F1500FE477B /* TestNewAPITests.m */; };
 		0C49047F1F5D3F1500FE477B /* TestNewAPIUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C49047E1F5D3F1500FE477B /* TestNewAPIUITests.m */; };
 		0CC365D11F5E91A70034208E /* TestNewAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CC365D01F5E91A70034208E /* TestNewAPI.m */; };
 		0CC365DA1F5E94990034208E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CC365D91F5E94990034208E /* AppDelegate.m */; };
@@ -53,7 +52,6 @@
 		0C4904681F5D3F1500FE477B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0C4904691F5D3F1500FE477B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		0C49046F1F5D3F1500FE477B /* TestNewAPITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestNewAPITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		0C4904731F5D3F1500FE477B /* TestNewAPITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestNewAPITests.m; sourceTree = "<group>"; };
 		0C4904751F5D3F1500FE477B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0C49047A1F5D3F1500FE477B /* TestNewAPIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestNewAPIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C49047E1F5D3F1500FE477B /* TestNewAPIUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestNewAPIUITests.m; sourceTree = "<group>"; };
@@ -144,7 +142,6 @@
 		0C4904721F5D3F1500FE477B /* TestNewAPITests */ = {
 			isa = PBXGroup;
 			children = (
-				0C4904731F5D3F1500FE477B /* TestNewAPITests.m */,
 				0CC365D01F5E91A70034208E /* TestNewAPI.m */,
 				0C4904751F5D3F1500FE477B /* Info.plist */,
 			);
@@ -347,7 +344,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C4904741F5D3F1500FE477B /* TestNewAPITests.m in Sources */,
 				0CC365D11F5E91A70034208E /* TestNewAPI.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -77,7 +77,6 @@
  XCTWaiterResultInvertedFulfillment,
  XCTWaiterResultInterrupted      // 多个waiter嵌套，外部waiter timeout导致内部waiter timeout
  */
-
 - (void)test_asyncDownload_newAPI_completed {
     
     Downloader *loader = [Downloader new];
@@ -130,6 +129,7 @@
     }
 }
 
+// 超时
 - (void)test_asyncDownload_newAPI_timeout {
     
     Downloader *loader = [Downloader new];
@@ -151,6 +151,7 @@
     XCTAssert(result == XCTWaiterResultTimedOut, @"failed: %ld", (long)result);
 }
 
+// expection顺序错误
 - (void)test_asyncDownload_newAPI_incorrectOrder {
     
     Downloader *loader = [Downloader new];
@@ -170,6 +171,7 @@
     XCTAssert(result == XCTWaiterResultIncorrectOrder, @"failed: %ld", (long)result);
 }
 
+// 控制expection顺序
 - (void)test_asyncDownload_newAPI_order {
     
     Downloader *loader = [Downloader new];
