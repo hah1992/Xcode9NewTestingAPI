@@ -17,7 +17,7 @@
 @implementation Downloader
 - (void)downloadWithCompletion:(void (^)(BOOL, NSError *))completion {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        !completion ?: completion(YES, nil);
+        !completion ?: completion(arc4random()%2, nil);
     });
 }
 
@@ -67,9 +67,9 @@
     Downloader *loader = [Downloader new];
     
     // download 时间为1s
-    XCTestExpectation *donwloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
+    XCTestExpectation *downloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
     [loader downloadWithCompletion:^(BOOL success, NSError *err) {
-        [donwloadException fulfill];
+        [downloadException fulfill];
     }];
     
     // upload 时间为3s
@@ -78,40 +78,9 @@
         [uploadException fulfill];
     }];
     
-    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[donwloadException, uploadException] timeout:4 enforceOrder:NO];
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[downloadException, uploadException] timeout:4 enforceOrder:NO];
     
     XCTAssert(result == XCTWaiterResultCompleted, @"failed: %ld", (long)result);
-    
-    switch (result) {
-            //
-        case XCTWaiterResultCompleted:
-            NSLog(@"++++++++++ completed");
-            break;
-            
-            
-        case XCTWaiterResultTimedOut:
-            NSLog(@"++++++++++ timeout");
-            break;
-            
-            
-        case XCTWaiterResultIncorrectOrder:
-            NSLog(@"++++++++++ incorrect order");
-            break;
-            
-            
-        case XCTWaiterResultInvertedFulfillment:
-            NSLog(@"++++++++++ inverted fulfill");
-            break;
-            
-            
-        case XCTWaiterResultInterrupted:
-            NSLog(@"++++++++++ interrupted");
-            
-            break;
-            
-        default:
-            break;
-    }
 }
 
 // 超时
@@ -120,9 +89,9 @@
     Downloader *loader = [Downloader new];
     
     // download 时间为1s
-    XCTestExpectation *donwloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
+    XCTestExpectation *downloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
     [loader downloadWithCompletion:^(BOOL success, NSError *err) {
-        [donwloadException fulfill];
+        [downloadException fulfill];
     }];
     
     // upload 时间为3s
@@ -131,7 +100,8 @@
         [uploadException fulfill];
     }];
     
-    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[donwloadException, uploadException] timeout:2 enforceOrder:NO];
+    // expections数组中任一一个超时，result == XCTWaiterResultTimedOut
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[downloadException, uploadException] timeout:2 enforceOrder:NO];
     
     XCTAssert(result == XCTWaiterResultTimedOut, @"failed: %ld", (long)result);
 }
@@ -141,9 +111,9 @@
     
     Downloader *loader = [Downloader new];
     
-    XCTestExpectation *donwloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
+    XCTestExpectation *downloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
     [loader downloadWithCompletion:^(BOOL success, NSError *err) {
-        [donwloadException fulfill];
+        [downloadException fulfill];
     }];
     
     XCTestExpectation *uploadException = [[XCTestExpectation alloc] initWithDescription:@"upload"];
@@ -151,29 +121,54 @@
         [uploadException fulfill];
     }];
     
-    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[uploadException, donwloadException] timeout:4 enforceOrder:YES];
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[uploadException, downloadException] timeout:4 enforceOrder:YES];
     
     XCTAssert(result == XCTWaiterResultIncorrectOrder, @"failed: %ld", (long)result);
 }
 
-// 控制expection顺序
-- (void)test_asyncDownload_newAPI_order {
+// 嵌套情况下，内部waiting被外部的fulfill中断
+- (void)test_asyncDownload_newAPI_interraupted {
     
     Downloader *loader = [Downloader new];
     
     // download 时间为1s
-    XCTestExpectation *donwloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
+    XCTestExpectation *downloadException = [[XCTestExpectation alloc] initWithDescription:@"download"];
     // upload 时间为3s
     XCTestExpectation *uploadException = [[XCTestExpectation alloc] initWithDescription:@"upload"];
+    
     [loader downloadWithCompletion:^(BOOL success, NSError *err) {
         [loader uploadWithCompletion:^(BOOL success, NSError *err) {
             [uploadException fulfill];
         }];
-        XCTWaiterResult result2 = [XCTWaiter waitForExpectations:@[uploadException] timeout:4 enforceOrder:NO];
+        XCTWaiterResult result2 = [XCTWaiter waitForExpectations:@[uploadException] timeout:4];
         XCTAssert(result2 == XCTWaiterResultInterrupted, @"failed2: %ld", (long)result2);
-        [donwloadException fulfill];
+        [downloadException fulfill];
     }];
     
-    [XCTWaiter waitForExpectations:@[donwloadException] timeout:0.5 enforceOrder:NO];
+    [XCTWaiter waitForExpectations:@[downloadException] timeout:0.5];
 }
+
+- (void)test_asyncDownlooad_newAPI_invert {
+    Downloader *loader = [Downloader new];
+    
+    XCTestExpectation *downloadFailedException = [[XCTestExpectation alloc] initWithDescription:@"download failed"];
+    XCTestExpectation *downloadSuccessException = [[XCTestExpectation alloc] initWithDescription:@"download success"];
+    /*
+     To check that a situation does not occur during testing, create an expectation that is fulfilled when the unexpected situation occurs, and set its inverted property to true. Your test will fail immediately if the inverted expectation is fulfilled.
+     */
+    downloadFailedException.inverted = YES;
+    [loader downloadWithCompletion:^(BOOL success, NSError *err) {
+        if (success) {
+            [downloadSuccessException fulfill];
+        } else {
+            [downloadFailedException fulfill];
+        }
+        
+    }];
+    
+    XCTWaiterResult result1 = [XCTWaiter waitForExpectations:@[downloadFailedException] timeout:4];
+    
+    XCTAssert(result1 == XCTWaiterResultInvertedFulfillment, @"failed: %ld", (long)result1);
+}
+
 @end
