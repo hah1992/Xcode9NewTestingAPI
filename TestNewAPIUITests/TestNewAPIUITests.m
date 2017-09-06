@@ -71,4 +71,33 @@
     XCTAssert(contentLabel.exists);
 }
 
+- (void)testNewTechnoligies {
+    
+    __block XCUIApplication *app;
+    
+    // 创建Launch Activity
+    [XCTContext runActivityNamed:@"Launch" block:^(id<XCTActivity>  _Nonnull activity) {
+        app = [[XCUIApplication alloc] init];
+        [app launch];
+    }];
+    
+    // 创建ScreenShots Activity
+    [XCTContext runActivityNamed:@"ScreenShots" block:^(id<XCTActivity>  _Nonnull activity) {
+        // 生成主屏幕截图
+        XCUIScreenshot *screenShot = [[XCUIScreen mainScreen] screenshot];
+        // 将截屏添加到附件中
+        XCTAttachment *screenShotAttachment = [XCTAttachment attachmentWithScreenshot:screenShot];
+        // 确保测试成功后attachment不会被自动删除, 这个同样可以在Xcode的中设置
+        screenShotAttachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+        // attachment添加到activity中
+        [activity addAttachment:screenShotAttachment];
+        
+        XCUIElement *textField = app.textFields[@"Input"];
+        XCUIScreenshot *textFieldScreenShot = [textField screenshot];
+        XCTAttachment *textFieldAttachment = [XCTAttachment attachmentWithScreenshot:textFieldScreenShot];
+        textFieldAttachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+        [activity addAttachment:textFieldAttachment];
+    }];
+}
+
 @end

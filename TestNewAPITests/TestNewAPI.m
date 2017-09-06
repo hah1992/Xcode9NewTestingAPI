@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 
+#define DownloadSuccess 0
 
 @interface Downloader : NSObject
 - (void)downloadWithCompletion:(void (^)(BOOL success, NSError *err))completion;
@@ -17,7 +18,7 @@
 @implementation Downloader
 - (void)downloadWithCompletion:(void (^)(BOOL, NSError *))completion {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        !completion ?: completion(arc4random()%2, nil);
+        !completion ?: completion(DownloadSuccess, nil);
     });
 }
 
@@ -28,7 +29,7 @@
 }
 @end
 
-@interface TestNewAPI : XCTestCase
+@interface TestNewAPI : XCTestCase<XCTWaiterDelegate>
 @end
 
 @implementation TestNewAPI
@@ -55,6 +56,8 @@
     }];
 }
 
+
+#pragma mark - async test
 /*
  XCTWaiterResultCompleted,   // wait的所有exception都为fulfulled
  XCTWaiterResultTimedOut,    // 在设定时间内任一exception不是fullfilled
@@ -140,35 +143,76 @@
         [loader uploadWithCompletion:^(BOOL success, NSError *err) {
             [uploadException fulfill];
         }];
-        XCTWaiterResult result2 = [XCTWaiter waitForExpectations:@[uploadException] timeout:4];
-        XCTAssert(result2 == XCTWaiterResultInterrupted, @"failed2: %ld", (long)result2);
         [downloadException fulfill];
+        XCTWaiterResult result2 = [XCTWaiter waitForExpectations:@[uploadException] timeout:4];
+        NSLog(@" result :%ld ", (long)result2);
+        XCTAssert(result2 == XCTWaiterResultInterrupted, @"failed2: %ld", (long)result2);
     }];
     
-    [XCTWaiter waitForExpectations:@[downloadException] timeout:0.5];
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[downloadException] timeout:2];
+    NSLog(@" result :%ld ", (long)result);
 }
 
 - (void)test_asyncDownlooad_newAPI_invert {
     Downloader *loader = [Downloader new];
     
     XCTestExpectation *downloadFailedException = [[XCTestExpectation alloc] initWithDescription:@"download failed"];
-    XCTestExpectation *downloadSuccessException = [[XCTestExpectation alloc] initWithDescription:@"download success"];
     /*
+     
+     Indicates that the expectation is not intended to happen.
      To check that a situation does not occur during testing, create an expectation that is fulfilled when the unexpected situation occurs, and set its inverted property to true. Your test will fail immediately if the inverted expectation is fulfilled.
      */
+    // 为不符合测试条件的情况创建一个expection对象，并将inverted设置为YES，当expection fulfill的时候测试会马上失败
     downloadFailedException.inverted = YES;
     [loader downloadWithCompletion:^(BOOL success, NSError *err) {
-        if (success) {
-            [downloadSuccessException fulfill];
-        } else {
-            [downloadFailedException fulfill];
-        }
-        
+        [downloadFailedException fulfill];
     }];
     
-    XCTWaiterResult result1 = [XCTWaiter waitForExpectations:@[downloadFailedException] timeout:4];
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[downloadFailedException] timeout:1];
+    NSLog(@" result :%ld ", (long)result);
+    XCTAssert(result == XCTWaiterResultInvertedFulfillment, @"failed2: %ld", (long)result);
+}
+
+#pragma mark - delegate
+
+/*!
+ * @method -waiter:didTimeoutWithUnfulfilledExpectations:
+ * Invoked when not all waited on expectations are fulfilled during the timeout period. If the delegate
+ * is an XCTestCase instance, this will be reported as a test failure.
+ */
+- (void)waiter:(XCTWaiter *)waiter didTimeoutWithUnfulfilledExpectations:(NSArray<XCTestExpectation *> *)unfulfilledExpectations {
     
-    XCTAssert(result1 == XCTWaiterResultInvertedFulfillment, @"failed: %ld", (long)result1);
+    
+}
+
+/*!
+ * @method -waiter:fulfillmentDidViolateOrderingConstraintsForExpectation:requiredExpectation:
+ * Invoked when the -wait call has specified that fulfillment order should be enforced and an expectation
+ * has been fulfilled in the wrong order. If the delegate is an XCTestCase instance, this will be reported
+ * as a test failure.
+ */
+- (void)waiter:(XCTWaiter *)waiter fulfillmentDidViolateOrderingConstraintsForExpectation:(XCTestExpectation *)expectation requiredExpectation:(XCTestExpectation *)requiredExpectation {
+    
+}
+
+/*!
+ * @method -waiter:didFulfillInvertedExpectation:
+ * Invoked when an expectation marked as inverted (/see inverted) is fulfilled. If the delegate is an
+ * XCTestCase instance, this will be reported as a test failure.
+ */
+- (void)waiter:(XCTWaiter *)waiter didFulfillInvertedExpectation:(XCTestExpectation *)expectation {
+    
+    
+}
+
+/*!
+ * @method -nestedWaiter:wasInterruptedByTimedOutWaiter:
+ * Invoked when the waiter is interrupted prior to its expectations being fulfilled or timing out.
+ * This occurs when an "outer" waiter times out, resulting in any waiters nested inside it being
+ * interrupted to allow the call stack to quickly unwind.
+ */
+- (void)nestedWaiter:(XCTWaiter *)waiter wasInterruptedByTimedOutWaiter:(XCTWaiter *)outerWaiter {
+    
 }
 
 @end
